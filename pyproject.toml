@@ -1,0 +1,29 @@
+[project]
+name = "ai-agent-telco"
+version = "0.1.0"
+description = "Telco customer support AI agent with long-term memory, built on LangGraph and deployed as a Databricks App"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.129.0",
+    "uvicorn>=0.41.0",
+    "databricks-langchain[memory]>=0.17.0",
+    "databricks-sdk>=0.79.0",
+    "databricks-agents>=1.9.3",
+    "mlflow>=3.10.1",
+    "langgraph>=1.0.9",
+    "langchain-mcp-adapters>=0.2.1",
+    "unitycatalog-langchain[databricks]",
+    "pydantic",
+]
+
+[project.scripts]
+start-app = "scripts.start_app:main"
+start-server = "agent_server.start_server:main"
+agent-evaluate = "agent_server.evaluate_agent:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agent_server", "scripts"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

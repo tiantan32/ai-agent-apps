@@ -1,0 +1,67 @@
+bundle:
+  name: ai-agent-telco
+
+resources:
+  apps:
+    ai-agent-telco:
+      name: ai-agent-telco
+      description: "Telco customer support AI agent with long-term memory"
+      source_code_path: .
+
+  experiments:
+    agent_experiment:
+      name: /Users/${workspace.current_user.userName}/ai-agent-telco-app
+
+  jobs:
+    ai-agent-data-setup:
+      name: ai-agent-data-setup
+      tags:
+        project: ai-agent-apps
+      tasks:
+        - task_key: "01_create_tools"
+          notebook_task:
+            notebook_path: ./notebooks/01-create-tools/01_create_first_billing_agent.py
+            source: WORKSPACE
+          environment_key: "default"
+
+        - task_key: "02_agent_eval"
+          depends_on:
+            - task_key: "01_create_tools"
+          notebook_task:
+            notebook_path: ./notebooks/02-agent-eval/02.1_agent_evaluation.py
+            source: WORKSPACE
+          environment_key: "default"
+
+        - task_key: "03_knowledge_base_rag"
+          depends_on:
+            - task_key: "02_agent_eval"
+          notebook_task:
+            notebook_path: ./notebooks/03-knowledge-base-rag/03.1-pdf-rag-tool.py
+            source: WORKSPACE
+          environment_key: "default"
+
+      environments:
+        - environment_key: "default"
+          spec:
+            client: "2"
+
+targets:
+  dev:
+    mode: development
+    default: true
+    resources:
+      apps:
+        ai-agent-telco:
+          name: ai-agent-telco-ttan
+      experiments:
+        agent_experiment:
+          name: /Users/${workspace.current_user.userName}/ai-agent-telco-app-dev
+
+  prod:
+    resources:
+      apps:
+        ai-agent-telco:
+          name: ai-agent-telco
+      experiments:
+        agent_experiment:
+          name: /Users/${workspace.current_user.userName}/ai-agent-telco-app
