@@ -104,7 +104,10 @@ async def stream_chat(req: StreamRequest):
     from langchain_core.messages import AIMessage
 
     async def event_stream():
+        from agent_server.agent import invoke_handler
+        import agent_server.agent as _agent_mod
         from agent_server.scorers import score_in_background
+        from mlflow.tracing.constant import SpanAttributeKey
 
         # Ensure traces go to the correct experiment
         if MLFLOW_EXPERIMENT_ID:
@@ -116,48 +119,25 @@ async def stream_chat(req: StreamRequest):
         try:
             yield f"data: {_json.dumps({'type': 'thinking', 'text': 'Running agent...'})}\n\n"
 
-            # Import agent components
-            from agent_server.agent import (
-                init_agent, MEMORY_ENABLED, LAKEBASE_INSTANCE_NAME,
-                LAKEBASE_AUTOSCALING_PROJECT, LAKEBASE_AUTOSCALING_BRANCH,
-                EMBEDDING_ENDPOINT, EMBEDDING_DIMS, sp_workspace_client,
-            )
+            # Wrap in mlflow.start_span to create ResponsesAgent-formatted root span
+            # (same as AgentServer._handle_invoke_request)
+            request_data = {"input": [{"role": "user", "content": req.message}]}
+            from mlflow.types.responses import ResponsesAgentRequest
+            agent_request = ResponsesAgentRequest(**request_data)
 
-            # Build agent with optional Lakebase memory
-            store = None
-            config = {}
-            ctx_manager = None
+            with mlflow.start_span(name="invoke_handler") as span:
+                span.set_inputs(request_data)
+                response = await invoke_handler(agent_request)
+                result = response.model_dump() if hasattr(response, "model_dump") else response
+                span.set_attribute(SpanAttributeKey.MESSAGE_FORMAT, "openai")
+                span.set_outputs(result)
 
-            if MEMORY_ENABLED:
-                from databricks_langchain import AsyncDatabricksStore
-                store_kwargs = {"embedding_endpoint": EMBEDDING_ENDPOINT, "embedding_dims": EMBEDDING_DIMS}
-                if LAKEBASE_AUTOSCALING_BRANCH:
-                    store_kwargs["branch"] = LAKEBASE_AUTOSCALING_BRANCH
-                    if LAKEBASE_AUTOSCALING_PROJECT and not LAKEBASE_AUTOSCALING_BRANCH.startswith("projects/"):
-                        store_kwargs["project"] = LAKEBASE_AUTOSCALING_PROJECT
-                elif LAKEBASE_INSTANCE_NAME:
-                    store_kwargs["instance_name"] = LAKEBASE_INSTANCE_NAME
-                elif LAKEBASE_AUTOSCALING_PROJECT:
-                    store_kwargs["project"] = LAKEBASE_AUTOSCALING_PROJECT
-
-                ctx_manager = AsyncDatabricksStore(**store_kwargs)
-                store = await ctx_manager.__aenter__()
-                await store.setup()
-                config = {"configurable": {"store": store, "user_id": "app-user"}}
-
-            agent = await init_agent(store=store, workspace_client=sp_workspace_client)
-
-            # Run agent — autolog creates the trace
-            messages = {"messages": [{"role": "user", "content": req.message}]}
-            result = await agent.ainvoke(input=messages, config=config)
-            raw_messages = result.get("messages", [])
+            # Get raw messages stashed by invoke_handler for SSE parsing
+            raw_messages = list(_agent_mod._last_invoke_raw_messages)
+            _agent_mod._last_invoke_raw_messages = []
 
             _trace_id = mlflow.get_last_active_trace_id() or ""
             print(f"[TRACE] Agent trace ID: {_trace_id}", flush=True)
-
-            # Cleanup Lakebase
-            if ctx_manager:
-                await ctx_manager.__aexit__(None, None, None)
 
             # Parse result messages to extract thinking, planning, tool outputs, answer
             thinking_steps = ["Analyzing your question...", "Running agent..."]
@@ -203,15 +183,6 @@ async def stream_chat(req: StreamRequest):
             _save_tools = list(tool_outputs)
             _answer = final_text
             _context = "\n".join(tool_outputs)[:5000]
-
-            # Set trace tags for request/response preview
-            if _trace_id:
-                try:
-                    client = mlflow.MlflowClient()
-                    client.set_trace_tag(_trace_id, "mlflow.trace.request_preview", req.message)
-                    client.set_trace_tag(_trace_id, "mlflow.trace.response_preview", final_text[:1000] if final_text else "")
-                except Exception:
-                    pass
 
             def _bg():
                 time.sleep(5)

@@ -230,9 +230,14 @@ async def init_agent(store: Optional[BaseStore] = None, workspace_client=None):
     )
 
 
+# Stash raw LangGraph messages so /stream can parse thinking/planning/tools
+_last_invoke_raw_messages = []
+
+
 @invoke()
 async def invoke_handler(request: ResponsesAgentRequest) -> ResponsesAgentResponse:
     """Handle invocation — run the agent and return only the final text answer."""
+    global _last_invoke_raw_messages
     from langchain_core.messages import AIMessage
 
     user_id = get_user_id(request)
@@ -264,6 +269,9 @@ async def invoke_handler(request: ResponsesAgentRequest) -> ResponsesAgentRespon
 
     if ctx_manager:
         await ctx_manager.__aexit__(None, None, None)
+
+    # Stash raw messages for /stream endpoint
+    _last_invoke_raw_messages = list(result.get("messages", []))
 
     # Extract the final AI message text
     final_text = ""
