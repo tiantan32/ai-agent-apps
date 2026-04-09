@@ -9,7 +9,7 @@ env:
   - name: MLFLOW_TRACING_DESTINATION
     value: "ttan_demo_catalog_main.ai_agent_apps"
   - name: LLM_ENDPOINT_NAME
-    value: "databricks-claude-3-7-sonnet"
+    value: "databricks-claude-sonnet-4-6"
   - name: UC_TOOL_NAMES
     value: "ttan_demo_catalog_main.ai_agent_apps.*"
   - name: VECTOR_SEARCH_INDEX

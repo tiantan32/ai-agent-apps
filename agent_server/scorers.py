@@ -139,7 +139,7 @@ def evaluate_response(
             print(f"[SCORER] {name} scoring failed: {e}", flush=True)
 
     # --- 4-5: Custom LLM-as-judge (evaluate FINAL ANSWER only) ---
-    llm_ep = llm_endpoint or "databricks-claude-3-7-sonnet"
+    llm_ep = llm_endpoint or "databricks-claude-sonnet-4-6"
     judge = ChatDatabricks(endpoint=llm_ep, temperature=0.0)
 
     custom_metrics = {

@@ -65,7 +65,7 @@ if _host and not _host.startswith("http"):
 ############################################
 # Configuration
 ############################################
-LLM_ENDPOINT_NAME = os.getenv("LLM_ENDPOINT_NAME", "databricks-claude-3-7-sonnet")
+LLM_ENDPOINT_NAME = os.getenv("LLM_ENDPOINT_NAME", "databricks-claude-sonnet-4-6")
 UC_TOOL_NAMES = os.getenv("UC_TOOL_NAMES", "ttan_demo_catalog_main.ai_agent_apps.*").split(",")
 VECTOR_SEARCH_INDEX = os.getenv("VECTOR_SEARCH_INDEX", "")
 VECTOR_SEARCH_ENDPOINT = os.getenv("VECTOR_SEARCH_ENDPOINT_NAME", "dbdemos_vs_endpoint")

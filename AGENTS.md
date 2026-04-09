@@ -38,7 +38,7 @@ User Request -> Databricks App (OAuth) -> FastAPI (/invocations)
 ## Configuration
 
 All configuration is via environment variables (see `.env.example`). Key settings:
-- `LLM_ENDPOINT_NAME` — Model endpoint (default: `databricks-claude-3-7-sonnet`)
+- `LLM_ENDPOINT_NAME` — Model endpoint (default: `databricks-claude-sonnet-4-6`)
 - `UC_TOOL_NAMES` — Comma-separated UC function patterns
 - `VECTOR_SEARCH_INDEX` — Vector Search index name (empty to disable)
 - `LAKEBASE_INSTANCE_NAME` or `LAKEBASE_AUTOSCALING_PROJECT`/`BRANCH` — Memory backend

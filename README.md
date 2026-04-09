@@ -20,8 +20,8 @@ A production-ready **AI agent for telecom customer support** built on Databricks
             +-------v-------+           +--------v--------+
             |  LangGraph    |           |    Lakebase      |
             |  Agent        |           |  (Chat History + |
-            |  (Claude 3.7  |           |   Long-Term      |
-            |   Sonnet)     |           |   Memory)        |
+            |  (Claude      |           |   Long-Term      |
+            |  Sonnet 4.6)  |           |   Memory)        |
             +-------+-------+           +-----------------+
                     |
      +--------------+--------------+
@@ -137,7 +137,7 @@ ai-agent-apps/
 Copy `.env.example` to `.env` and set your values:
 
 ```env
-LLM_ENDPOINT_NAME=databricks-claude-3-7-sonnet
+LLM_ENDPOINT_NAME=databricks-claude-sonnet-4-6
 UC_TOOL_NAMES=your_catalog.your_schema.*
 VECTOR_SEARCH_INDEX=your_catalog.your_schema.knowledge_base_vs_index
 EMBEDDING_ENDPOINT=databricks-gte-large-en
@@ -180,7 +180,7 @@ Targets: `dev` (personalized, default) and `prod` (shared).
 
 | Component | Technology |
 |-----------|-----------|
-| LLM | Claude 3.7 Sonnet (Databricks Foundation Model API) |
+| LLM | Claude Sonnet 4.6 (Databricks Foundation Model API) |
 | Agent Framework | LangGraph |
 | Tools | Unity Catalog Functions, Genie Agents, Vector Search |
 | Memory | AsyncDatabricksStore (Lakebase + GTE-Large-EN embeddings) |

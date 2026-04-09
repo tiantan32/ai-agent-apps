@@ -24,7 +24,7 @@ except Exception as e:
     logger.warning(f"Lakebase DB init deferred: {e}")
 
 MLFLOW_EXPERIMENT_ID = os.getenv("MLFLOW_EXPERIMENT_ID", "")
-LLM_ENDPOINT_NAME = os.getenv("LLM_ENDPOINT_NAME", "databricks-claude-3-7-sonnet")
+LLM_ENDPOINT_NAME = os.getenv("LLM_ENDPOINT_NAME", "databricks-claude-sonnet-4-6")
 
 
 # ─── Feedback ────────────────────────────────────────────────────────
