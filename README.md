@@ -10,25 +10,35 @@ A production-ready **AI agent for telecom customer support** built on Databricks
 ## Architecture
 
 ```
-User Request
-  |
-  v
-Databricks App (FastAPI + OAuth)
-  |
-  v
-LangGraph Agent (Claude 3.7 Sonnet)
-  |
-  +---> UC Functions        (customer lookup, billing, math)
-  +---> Genie Agents        (account & billing semantic SQL)
-  +---> Vector Search       (telco knowledge base RAG)
-  +---> Memory Tools        (Lakebase long-term memory)
-  +---> get_current_time    (date/time awareness)
-  |
-  v
-SSE Stream --> Chat UI
-  |
-  v
-Background: MLflow Tracing + 5 LLM-as-Judge Scorers + Lakebase Chat History
+                          +------------------+
+                          |   Databricks App |
+                          |  (FastAPI + SSE) |
+                          +--------+---------+
+                                   |
+                    +--------------+--------------+
+                    |                             |
+            +-------v-------+           +--------v--------+
+            |  LangGraph    |           |    Lakebase      |
+            |  Agent        |           |  (Chat History + |
+            |  (Claude 3.7  |           |   Long-Term      |
+            |   Sonnet)     |           |   Memory)        |
+            +-------+-------+           +-----------------+
+                    |
+     +--------------+--------------+
+     |              |              |
++----v----+  +------v------+  +---v-----------+
+|  Genie  |  |   Vector    |  | UC Functions  |
+| Agents  |  |   Search    |  | (Customer     |
+| (Account|  | (Telco KB   |  |  Lookup,      |
+| +Billing)|  |  RAG)      |  |  Billing,     |
++---------+  +-------------+  |  Math)        |
+     |                        +---------------+
+     |
++----v-----------+         +------------------+
+| Unity Catalog  |         |  MLflow Tracing  |
+| (Customer &    |         |  + LLM-as-Judge  |
+|  Billing Data) |         |  (5 scorers)     |
++----------------+         +------------------+
 ```
 
 ---
